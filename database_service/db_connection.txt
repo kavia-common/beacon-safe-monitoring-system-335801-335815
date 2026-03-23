@@ -1,0 +1,1 @@
+psql postgresql://beacon_safe@localhost:5432/beacon_safe
