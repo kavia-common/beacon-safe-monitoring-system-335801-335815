@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
@@ -66,12 +67,33 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+def _split_csv_env(name: str, default: list[str]) -> list[str]:
+    raw = (os.getenv(name) or "").strip()
+    if not raw:
+        return default
+    return [item.strip() for item in raw.split(",") if item.strip()]
+
+allowed_origins = _split_csv_env("ALLOWED_ORIGINS", ["http://localhost:3000"])
+allowed_methods = _split_csv_env(
+    "ALLOWED_METHODS",
+    ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+)
+allowed_headers = _split_csv_env(
+    "ALLOWED_HEADERS",
+    ["Content-Type", "Authorization"],
+)
+cors_max_age = int((os.getenv("CORS_MAX_AGE") or "600").strip() or "600")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    # NOTE: Avoid allow_origins=["*"] with allow_credentials=True (browsers reject it).
+    allow_origins=allowed_origins,
+    # Token-based auth (Authorization header) does not require credentials.
+    # Can be enabled via env later if cookies are introduced.
+    allow_credentials=False,
+    allow_methods=allowed_methods,
+    allow_headers=allowed_headers,
+    max_age=cors_max_age,
 )
 
 

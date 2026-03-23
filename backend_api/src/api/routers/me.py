@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 
 from src.api.core.auth import AuthContext, require_auth_context
+from src.api.core.db import DatabaseOperationError
 from src.api.schemas import PreferencesOut, ProfileResponse, UpdateSettingsRequest, UserOut
 from src.api.services.user_service import get_profile_by_username, update_settings
 
@@ -28,6 +29,12 @@ async def get_me(request: Request, auth: AuthContext = Depends(require_auth_cont
     - ProfileResponse { user, preferences }
     """
     pool = request.app.state.db_pool
+    if pool is None:
+        raise DatabaseOperationError(
+            operation="db.pool.unavailable",
+            detail="Database pool not initialized. Ensure database_service is running.",
+            original_exception=RuntimeError("app.state.db_pool is None"),
+        )
     profile = await get_profile_by_username(pool, auth.username)
 
     return JSONResponse(
@@ -65,6 +72,12 @@ async def patch_settings(
     - Updated ProfileResponse { user, preferences }
     """
     pool = request.app.state.db_pool
+    if pool is None:
+        raise DatabaseOperationError(
+            operation="db.pool.unavailable",
+            detail="Database pool not initialized. Ensure database_service is running.",
+            original_exception=RuntimeError("app.state.db_pool is None"),
+        )
     updated = await update_settings(
         pool,
         auth.username,

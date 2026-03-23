@@ -1,0 +1,2 @@
+{ "working_directory": "/home/kavia/workspace/code-generation",
+ "command": "DEBIAN_FRONTEND=noninteractive apt-get update -y && DEBIAN_FRONTEND=noninteractive apt-get install -y postgresql postgresql-contrib && rm -rf /var/lib/apt/lists/*" }
